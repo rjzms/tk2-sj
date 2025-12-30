@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>刷题 Pro</title>
+    <style>
+        /* --- 基础变量 --- */
+        :root {
+            --primary: #42b883;
+            --primary-dark: #33a06f;
+            --secondary: #35495e;
+            --bg-body: #f0f2f5;
+            --bg-card: #ffffff;
+            --text-main: #2c3e50;
+            --text-sub: #606266;
+            --border: #e4e7ed;
+            --code-bg: #282c34;
+            --success: #67c23a;
+            --danger: #f56c6c;
+            --sidebar-w: 300px;
+            --header-h-mobile: 50px;
+        }
+
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0; padding: 0;
+            background: var(--bg-body);
+            font-family: -apple-system, "Microsoft YaHei", sans-serif;
+            color: var(--text-main);
+            /* PC端默认布局：全屏固定 */
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- 侧边栏 (PC端) --- */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: #fff;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+            transition: transform 0.3s ease;
+        }
+
+        .brand-area {
+            padding: 20px;
+            background: var(--secondary);
+            color: white;
+            flex-shrink: 0;
+        }
+        .brand-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
+        .brand-sub { font-size: 0.8rem; opacity: 0.8; }
+        .nav-home { text-decoration: none; color: #fff; font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; display: inline-block; opacity: 0.9; }
+
+        .sidebar-controls { padding: 10px; border-bottom: 1px solid var(--border); background: #f8f9fa; }
+        
+        .shuffle-toggle {
+            display: flex; align-items: center; justify-content: center;
+            padding: 10px; background: #fff; border: 2px dashed #dcdfe6;
+            border-radius: 6px; cursor: pointer; color: #606266;
+            font-weight: bold; font-size: 0.95rem; user-select: none;
+        }
+        .shuffle-toggle.active { background: #e1f3d8; border-color: var(--success); color: var(--success); }
+
+        .mode-list {
+            padding: 10px; border-bottom: 1px solid var(--border);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-shrink: 0;
+        }
+        .mode-item {
+            padding: 8px; text-align: center; background: #f4f4f5;
+            border-radius: 4px; cursor: pointer; font-size: 0.9rem;
+            border: 1px solid transparent; transition: all 0.2s;
+        }
+        .mode-item.active { background: var(--primary); color: white; font-weight: bold; }
+
+        .grid-container {
+            flex: 1; overflow-y: auto; padding: 15px;
+            display: grid; grid-template-columns: repeat(5, 1fr);
+            grid-auto-rows: 36px; gap: 6px; align-content: start;
+        }
+        .grid-item {
+            display: flex; justify-content: center; align-items: center;
+            font-size: 0.8rem; background: #f9fafc; border: 1px solid #ebeef5;
+            border-radius: 4px; cursor: pointer; color: #909399;
+        }
+        .grid-item.current { background: var(--secondary); color: white; font-weight: bold; }
+        .grid-item.done-ok { background: #f0f9eb; color: var(--success); border-color: #e1f3d8; }
+        .grid-item.done-err { background: #fef0f0; color: var(--danger); border-color: #fde2e2; }
+
+        .sidebar-footer { padding: 10px; border-top: 1px solid var(--border); text-align: center; font-size: 0.85rem; color: #909399; background: #fff; }
+        .btn-reset { color: var(--text-sub); text-decoration: underline; cursor: pointer; border:none; background:none; }
+
+        /* --- 主内容区 (PC端) --- */
+        .main-area {
+            flex: 1; display: flex; flex-direction: column; position: relative;
+        }
+
+        .scroll-wrapper {
+            flex: 1; overflow-y: auto; padding: 40px;
+            display: flex; justify-content: center;
+            /* 增加底部留白，防止内容被底部栏遮挡 */
+            padding-bottom: 100px; 
+        }
+
+        .card {
+            background: var(--bg-card); width: 100%; max-width: 960px;
+            padding: 40px; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- 题目样式 --- */
+        .q-header { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
+        .tag { padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .tag-type { background: #e3fcf0; color: #166534; }
+        .tag-err { background: #fee2e2; color: #991b1b; }
+        
+        .q-body { 
+            font-size: 1.3rem; font-weight: 600; line-height: 1.6;
+            margin-bottom: 30px; border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 20px; word-wrap: break-word;
+        }
+
+        .opt-group { display: flex; flex-direction: column; gap: 12px; }
+        .opt-btn {
+            padding: 16px 20px; background: #fcfcfc; border: 2px solid #ebeef5;
+            border-radius: 8px; font-size: 1.05rem; cursor: pointer;
+            text-align: left; display: flex; word-break: break-all;
+            transition: background 0.1s;
+        }
+        .opt-btn:active { background: #f0f0f0; } /* 移动端触摸反馈 */
+        .opt-key { font-weight: bold; min-width: 30px; color: var(--secondary); flex-shrink: 0; }
+        .opt-val { flex: 1; line-height: 1.5; }
+        
+        .opt-btn.correct { background: #f0f9eb; border-color: var(--success); color: #166534; }
+        .opt-btn.correct .opt-key { color: #166534; }
+        .opt-btn.wrong { background: #fef0f0; border-color: var(--danger); color: #991b1b; }
+        .opt-btn.wrong .opt-key { color: #991b1b; }
+        .opt-btn.selected { border-color: #409eff; background: #ecf5ff; }
+
+        .input-box-area { margin-bottom: 20px; }
+        .text-input {
+            width: 100%; padding: 15px; border: 2px solid #dcdfe6;
+            border-radius: 6px; font-size: 1.1rem; line-height: 1.5;
+            min-height: 120px; font-family: inherit; resize: vertical;
+        }
+        .text-input:focus { border-color: var(--primary); }
+        .text-input.inp-correct { border-color: var(--success); background: #f0f9eb; color: #166534; }
+        .text-input.inp-wrong { border-color: var(--danger); background: #fef0f0; color: #991b1b; }
+
+        .input-feedback { margin-top: 15px; padding: 15px; border-radius: 6px; font-weight: bold; display: none; }
+        .feedback-success { background: #f0f9eb; color: #67c23a; border: 1px solid #b3e19d; }
+        .feedback-error { background: #fef0f0; color: #f56c6c; border: 1px solid #fab6b6; }
+
+        .code-block {
+            background: var(--code-bg); color: #abb2bf; padding: 15px;
+            border-radius: 6px; font-family: Consolas, monospace; font-size: 0.9rem;
+            line-height: 1.8; white-space: pre-wrap; overflow-x: auto; display: block;
+        }
+        
+        .cloze-input {
+            border: none; border-bottom: 2px solid #61aeee;
+            background: #3b4048; color: #fff; font-family: inherit; font-size: inherit;
+            text-align: center; padding: 0 2px; margin: 0 2px; border-radius: 3px;
+            min-width: 40px; outline: none;
+        }
+        .cloze-input.cloze-correct { background: #2e5c36; border-bottom-color: #67c23a; color: #a5d6a7; }
+        .cloze-input.cloze-wrong { background: #5c2e2e; border-bottom-color: #f56c6c; color: #fca5a5; }
+
+        .flashcard-box {
+            border: 2px dashed #dcdfe6; border-radius: 8px; padding: 30px;
+            text-align: center; cursor: pointer; background: #fdfdfd; margin-top: 15px;
+        }
+        .answer-reveal { display: none; margin-top: 10px; animation: slideDown 0.3s; }
+        .explain-box {
+            margin-top: 25px; padding: 20px; background: #fff8e6;
+            border: 1px solid #faecd8; border-radius: 6px; color: #8a6d3b;
+            line-height: 1.6; display: none; word-break: break-word;
+        }
+
+        /* --- 底部控制条 --- */
+        .control-bar {
+            background: #fff; border-top: 1px solid var(--border);
+            padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.03); flex-shrink: 0;
+            z-index: 15;
+        }
+        .key-badge { background: #f4f4f5; border: 1px solid #dcdfe6; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+        
+        .btn-nav {
+            padding: 12px 24px; border: none; border-radius: 6px;
+            font-weight: 600; font-size: 1rem; cursor: pointer;
+        }
+        .btn-prev { background: #f4f4f5; color: #606266; margin-right: 10px; }
+        .btn-next { background: var(--primary); color: white; }
+        
+        .submit-btn {
+            width: 100%; padding: 14px; margin-top: 20px;
+            background: #409eff; color: white; border: none; border-radius: 6px;
+            font-size: 1.1rem; cursor: pointer; font-weight: bold;
+        }
+
+        /* --- 移动端汉堡菜单按钮 --- */
+        .mobile-header { display: none; }
+        .menu-btn { font-size: 1.5rem; cursor: pointer; color: white; }
+        .mobile-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 18;
+        }
+
+        /* ================= 移动端适配 (核心修改) ================= */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                height: auto; /* 允许页面自然滚动 */
+                min-height: 100vh;
+                overflow-y: auto; /* 启用原生滚动，解决键盘遮挡 */
+                padding-top: var(--header-h-mobile); /* 为顶部栏留空 */
+                padding-bottom: 70px; /* 为底部控制条留空 */
+            }
+
+            /* 1. 移动端顶部栏 */
+            .mobile-header {
+                display: flex; align-items: center; padding: 0 15px;
+                height: var(--header-h-mobile); background: var(--secondary);
+                position: fixed; top: 0; left: 0; width: 100%; z-index: 15;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+            .mobile-title { color: white; font-weight: bold; margin-left: 15px; font-size: 1.1rem; }
+
+            /* 2. 侧边栏改为抽屉 */
+            .sidebar {
+                position: fixed; top: 0; left: -100%; height: 100vh;
+                width: 80%; max-width: 300px;
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            }
+            .sidebar.active { left: 0; }
+            .mobile-overlay.active { display: block; }
+
+            /* 3. 主内容区调整 */
+            .main-area { flex: none; width: 100%; }
+            .scroll-wrapper { 
+                overflow: visible; /* 取消内部滚动，使用body滚动 */
+                padding: 15px; 
+                padding-bottom: 0;
+            }
+            .card { padding: 20px; margin-bottom: 20px; }
+            
+            /* 4. 底部控制条 (固定底部) */
+            .control-bar {
+                position: fixed; bottom: 0; left: 0; width: 100%;
+                padding: 10px 15px;
+                transition: transform 0.3s; /* 用于键盘弹出时隐藏 */
+            }
+            /* 键盘弹出辅助类：隐藏底部条 */
+            body.keyboard-open .control-bar { transform: translateY(100%); }
+            
+            .hint { display: none; } /* 手机上不显示快捷键提示 */
+            
+            /* 字体大小调整 */
+            .q-body { font-size: 1.15rem; }
+            .opt-btn { padding: 12px 15px; font-size: 1rem; }
+            
+            /* 代码块优化 */
+            .code-block { font-size: 0.8rem; padding: 10px; }
+            .cloze-input { min-width: 30px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-header">
+        <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+        <div class="mobile-title">刷题 Pro</div>
+    </div>
+
+    <div class="mobile-overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="brand-area">
+            <a href="index.html" class="nav-home">⬅ 返回首页</a>
+            <div class="brand-title">刷题 Pro</div>
+            <div class="brand-sub">智能挖空版</div>
+        </div>
+
+        <div class="sidebar-controls">
+            <div id="shuffle-btn" class="shuffle-toggle" onclick="toggleShuffle()">
+                🔀 选项乱序: OFF
+            </div>
+        </div>
+        
+        <div class="mode-list">
+            <div class="mode-item active" onclick="changeMode('all')">全题库</div>
+            <div class="mode-item" onclick="changeMode('mistakes')" style="color:var(--danger)">错题本</div>
+            <div class="mode-item" onclick="changeMode('单选题')">单选题</div>
+            <div class="mode-item" onclick="changeMode('多选题')">多选题</div>
+            <div class="mode-item" onclick="changeMode('判断题')">判断题</div>
+            <div class="mode-item" onclick="changeMode('填空题')">填空题</div>
+            <div class="mode-item" onclick="changeMode('简答题')">简答题</div>
+            <div class="mode-item" onclick="changeMode('操作题')">操作题</div>
+        </div>
+
+        <div class="grid-container" id="grid-box"></div>
+
+        <div class="sidebar-footer">
+            <span id="stat-info">加载中...</span><br>
+            <button class="btn-reset" onclick="resetAll()">重置本章进度</button>
+        </div>
+    </aside>
+
+    <main class="main-area">
+        <div class="scroll-wrapper">
+            <div id="card-area" class="card">
+                <div style="text-align:center;padding:50px;color:#999;">
+                    <div style="font-size:2rem;margin-bottom:20px;">⏳</div>
+                    正在加载题库...
+                </div>
+            </div>
+        </div>
+
+        <div class="control-bar">
+            <div class="hint">
+                快捷键：<span class="key-badge">←</span>上一题 <span class="key-badge">→</span>下一题 <span class="key-badge">Enter</span>提交
+            </div>
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                <button class="btn-nav btn-prev" onclick="nav(-1)">上一题</button>
+                <div style="font-size:0.9rem; color:#999;" id="mobile-progress"></div>
+                <button class="btn-nav btn-next" onclick="nav(1)">下一题</button>
+            </div>
+        </div>
+    </main>
+
+<script>
+// ================= 核心逻辑：GitHub 适配版 =================
+
+const urlParams = new URLSearchParams(window.location.search);
+const currentSubject = urlParams.get('subject') || 'vue';
+const storeKey = 'quiz_pro_v2_' + currentSubject; 
+
+const subjectMap = {
+    'vue': 'Vue.js', 'python': 'Python', 'os': '操作系统', 'network': '计算机网络',
+    'mcu': '单片机', 'ds': '数据结构', 'se': '软件工程'
+};
+const titleText = (subjectMap[currentSubject] || currentSubject) + ' 刷题 Pro';
+document.title = titleText;
+document.querySelector('.brand-title').innerText = titleText;
+document.querySelector('.mobile-title').innerText = titleText; // 移动端标题
+
+let fullDB = []; 
+
+const state = {
+    progress: {}, mistakes: [], corrects: [],
+    mode: 'all', isShuffle: false,
+    currentList: [], multiTemp: [], clozeMap: {} 
+};
+
+const dom = {
+    gridBox: document.getElementById('grid-box'),
+    cardArea: document.getElementById('card-area'),
+    statInfo: document.getElementById('stat-info'),
+    modes: document.querySelectorAll('.mode-item'),
+    shuffleBtn: document.getElementById('shuffle-btn'),
+    sidebar: document.getElementById('sidebar'),
+    overlay: document.querySelector('.mobile-overlay')
+};
+
+async function init() {
+    try {
+        const fileName = currentSubject + '.json';
+        const response = await fetch(fileName + '?v=' + new Date().getTime());
+        if (!response.ok) throw new Error(`无法找到题库文件: ${fileName}`);
+        fullDB = await response.json();
+        
+        const saved = localStorage.getItem(storeKey);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                state.mistakes = data.mistakes || [];
+                state.corrects = data.corrects || [];
+                state.progress = data.progress || {};
+                state.isShuffle = !!data.isShuffle;
+                if(data.lastMode) state.mode = data.lastMode;
+            } catch(e) { console.error('Load error', e); }
+        }
+        updateShuffleUI();
+        changeMode(state.mode);
+    } catch (e) {
+        dom.cardArea.innerHTML = `<div style="text-align:center;padding:50px;color:red;"><h2>❌ 题库加载失败</h2><p>找不到文件: <b>${currentSubject}.json</b></p></div>`;
+        dom.statInfo.innerText = "加载失败";
+    }
+}
+
+function save() {
+    if (state.mode !== 'mistakes') state.progress[state.mode] = getCurrentIndex();
+    localStorage.setItem(storeKey, JSON.stringify({
+        mistakes: state.mistakes, corrects: state.corrects,
+        progress: state.progress, lastMode: state.mode, isShuffle: state.isShuffle
+    }));
+    updateUI();
+}
+
+function getCurrentIndex() { return state.idx || 0; }
+function formatText(text) { if(!text) return ''; return text.replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+function shuffleArray(array) {
+    let m = array.length, t, i, copy = [...array];
+    while (m) { i = Math.floor(Math.random() * m--); t = copy[m]; copy[m] = copy[i]; copy[i] = t; }
+    return copy;
+}
+
+function toggleShuffle() { state.isShuffle = !state.isShuffle; updateShuffleUI(); renderCard(); save(); }
+function updateShuffleUI() {
+    if(state.isShuffle) { dom.shuffleBtn.classList.add('active'); dom.shuffleBtn.innerText = '🔀 选项乱序: ON'; }
+    else { dom.shuffleBtn.classList.remove('active'); dom.shuffleBtn.innerText = '🔀 选项乱序: OFF'; }
+}
+
+function toggleSidebar() {
+    dom.sidebar.classList.toggle('active');
+    dom.overlay.classList.toggle('active');
+}
+
+function changeMode(mode) {
+    state.mode = mode; state.multiTemp = [];
+    dom.modes.forEach(el => { el.classList.toggle('active', el.innerText.includes(mode) || (mode==='all' && el.innerText.includes('全'))); });
+
+    if (mode === 'all') state.currentList = [...fullDB];
+    else if (mode === 'mistakes') state.currentList = fullDB.filter(q => state.mistakes.includes(q.id));
+    else state.currentList = fullDB.filter(q => q.type === mode);
+
+    if (mode === 'mistakes') {
+        state.idx = 0;
+        if(state.currentList.length === 0) {
+            dom.cardArea.innerHTML = `<div style="text-align:center;padding:50px;color:#999;">🎉 错题本是空的！太棒了！</div>`;
+            renderGrid(); toggleSidebar(); return; // 切换模式后自动关闭侧边栏
+        }
+    } else {
+        let savedIdx = state.progress[mode] || 0;
+        if (savedIdx >= state.currentList.length) savedIdx = 0;
+        state.idx = savedIdx;
+    }
+    
+    // 手机上切换模式后自动关闭侧边栏
+    if(window.innerWidth < 768 && dom.sidebar.classList.contains('active')) toggleSidebar();
+    
+    renderCard(); renderGrid(); updateUI();
+}
+
+function createClozeMode(codeText) {
+    const tokens = codeText.split(/([a-zA-Z0-9_$]+)/g);
+    const validIndices = [];
+    tokens.forEach((t, i) => { if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(t) && t.length > 1) validIndices.push(i); });
+    const shuffled = shuffleArray(validIndices);
+    const selectedIndices = shuffled.slice(0, 5);
+    let html = ''; const answers = {}; let inputCount = 0;
+    tokens.forEach((t, i) => {
+        if (selectedIndices.includes(i)) {
+            const currentCount = inputCount++; answers[currentCount] = t;
+            const width = Math.max(40, t.length * 10);
+            html += `<input type="text" class="cloze-input" data-idx="${currentCount}" style="width:${width}px" autocomplete="off">`;
+        } else { html += formatText(t); }
+    });
+    return { html, answers };
+}
+
+function renderCard() {
+    if(!state.currentList.length) return;
+    const q = state.currentList[state.idx];
+    const isMistake = state.mistakes.includes(q.id);
+    const total = state.currentList.length;
+    let safeQ = formatText(q.q);
+    
+    // 更新移动端底部进度
+    const mobProg = document.getElementById('mobile-progress');
+    if(mobProg) mobProg.innerText = `${state.idx + 1} / ${total}`;
+
+    let html = `<div class="q-header"><span class="tag tag-type">${q.type}</span>${isMistake ? '<span class="tag tag-err">错题本</span>' : ''}<span style="color:#aaa;margin-left:auto;font-size:0.9rem;">${state.idx + 1} / ${total}</span></div><div class="q-body">${q.id}. ${safeQ}</div>`;
+
+    if (q.type === '单选题') {
+        let opts = Object.entries(q.opts); if(state.isShuffle) opts = shuffleArray(opts);
+        html += `<div class="opt-group">`;
+        opts.forEach(([k, v]) => { html += `<div class="opt-btn" onclick="checkOne(this, '${k}', '${q.a}', ${q.id})"><span class="opt-key">${k}.</span><span class="opt-val">${formatText(v)}</span></div>`; });
+        html += `</div>` + renderDesc(q);
+    } else if (q.type === '判断题') {
+        let opts = ['对', '错']; if(state.isShuffle) opts = shuffleArray(opts);
+        html += `<div class="opt-group">`;
+        opts.forEach(opt => { html += `<div class="opt-btn" onclick="checkOne(this, '${opt}', '${q.a}', ${q.id})"><span class="opt-val" style="text-align:center;font-weight:bold;">${opt}</span></div>`; });
+        html += `</div>` + renderDesc(q);
+    } else if (q.type === '多选题') {
+        state.multiTemp = []; let opts = Object.entries(q.opts); if(state.isShuffle) opts = shuffleArray(opts);
+        html += `<div class="opt-group">`;
+        opts.forEach(([k, v]) => { html += `<div class="opt-btn" id="mbtn-${k}" onclick="toggleMulti('${k}')"><span class="opt-key">${k}.</span><span class="opt-val">${formatText(v)}</span></div>`; });
+        html += `</div><button class="submit-btn" onclick="checkMulti(${q.id}, '${q.a}')">提交答案 (Enter)</button>` + renderDesc(q);
+    } else if (q.type === '填空题' || q.type === '简答题') {
+        html += `<div class="input-box-area"><textarea id="input-${q.id}" class="text-input" placeholder="请输入你的答案..."></textarea><button class="submit-btn" onclick="checkTextAnswer(${q.id}, \`${q.a.replace(/`/g, '\\`')}\`, '${q.type}')">提交答案 (Enter)</button><div id="feedback-${q.id}" class="input-feedback"></div></div><div id="flash-wrapper-${q.id}" style="display:none"><div class="flashcard-box" onclick="this.querySelector('.answer-reveal').style.display='block';this.style.cursor='default';"><div style="font-weight:bold;color:#409eff;margin-bottom:10px;">参考答案</div><div class="answer-reveal"><div style="font-size:1.1rem;line-height:1.6;color:#2c3e50;">${formatText(q.a).replace(/\n/g, '<br>')}</div></div></div></div>` + renderDesc(q);
+    } else if (q.type === '操作题') {
+        const { html: clozeHtml, answers } = createClozeMode(q.a); state.clozeMap[q.id] = answers;
+        html += `<div style="margin-bottom:15px;color:#666;font-size:0.9rem;">请在代码中填写缺失的关键词：</div><pre class="code-block" id="cloze-block-${q.id}">${clozeHtml}</pre><button class="submit-btn" onclick="checkClozeAndSubmit(${q.id})">提交答案 (Enter)</button><div id="feedback-${q.id}" class="input-feedback"></div><div id="full-answer-${q.id}" style="display:none; margin-top:20px;"><div class="flashcard-box" style="padding:20px; text-align:left; border-color:#f56c6c; background:#fef0f0;"><div style="font-weight:bold;color:#f56c6c;margin-bottom:10px;text-align:center;">❌ 完整参考代码</div><pre class="code-block" style="background:#fff;border:1px solid #fde2e2;color:#333;">${formatText(q.a)}</pre></div>${renderDesc(q, true)}</div>`;
+    }
+    dom.cardArea.innerHTML = html;
+    
+    // 自动聚焦与键盘优化
+    const focusHandler = (el) => {
+        // 手机端：输入框获取焦点时，隐藏底部导航条，防止遮挡
+        if(window.innerWidth < 768) {
+            el.addEventListener('focus', () => document.body.classList.add('keyboard-open'));
+            el.addEventListener('blur', () => document.body.classList.remove('keyboard-open'));
+        }
+        setTimeout(() => el.focus(), 100);
+    };
+
+    if (q.type === '填空题' || q.type === '简答题') { 
+        const el = document.getElementById(`input-${q.id}`); 
+        if(el) focusHandler(el);
+    }
+    else if (q.type === '操作题') { 
+        const el = document.querySelector('.cloze-input'); 
+        if(el) focusHandler(el);
+    }
+    
+    // 滚动到顶部 (手机端体验更好)
+    if(window.innerWidth < 768) window.scrollTo(0, 0);
+    
+    save();
+}
+
+function renderDesc(q, showNow = false) { return `<div id="explain-${q.id}" class="explain-box" style="display:${showNow?'block':'none'}"><strong>💡 解析：</strong>${formatText(q.desc)}</div>`; }
+function renderGrid() { let html = ''; state.currentList.forEach((q, i) => { let cls = 'grid-item'; if (i === state.idx) cls += ' current'; else if (state.corrects.includes(q.id)) cls += ' done-ok'; else if (state.mistakes.includes(q.id)) cls += ' done-err'; html += `<div class="${cls}" onclick="jumpTo(${i})">${i+1}</div>`; }); dom.gridBox.innerHTML = html; }
+function updateUI() { dom.statInfo.innerText = `错题：${state.mistakes.length} | 已掌握：${state.corrects.length}`; }
+
+function checkOne(el, val, correctAns, id) {
+    if(el.parentElement.classList.contains('locked')) return; el.parentElement.classList.add('locked');
+    const isRight = val === correctAns; const explain = document.getElementById(`explain-${id}`);
+    if (isRight) { el.classList.add('correct'); handleResult(id, true); if(explain) explain.style.display = 'block'; setTimeout(() => nav(1), 800); }
+    else { el.classList.add('wrong'); handleResult(id, false); Array.from(el.parentElement.children).forEach(child => { let keyEl = child.querySelector('.opt-key'); let text = child.innerText; if ((keyEl && keyEl.innerText.includes(correctAns)) || text === correctAns) { child.classList.add('correct'); } }); if(explain) explain.style.display = 'block'; }
+}
+
+function toggleMulti(key) { const btn = document.getElementById(`mbtn-${key}`); const idx = state.multiTemp.indexOf(key); if(idx > -1) { state.multiTemp.splice(idx, 1); btn.classList.remove('selected'); } else { state.multiTemp.push(key); btn.classList.add('selected'); } }
+function checkMulti(id, correctStr) {
+    const correctArr = correctStr.replace(/[^A-Z]/g, '').split('').sort(); const userArr = state.multiTemp.sort(); const isRight = JSON.stringify(correctArr) === JSON.stringify(userArr);
+    const btns = document.querySelectorAll('.opt-btn'); btns.forEach(b => b.style.pointerEvents = 'none'); document.querySelector('.submit-btn').style.display = 'none'; const explain = document.getElementById(`explain-${id}`); if(explain) explain.style.display = 'block';
+    if (isRight) { userArr.forEach(k => document.getElementById(`mbtn-${k}`).classList.add('correct')); handleResult(id, true); setTimeout(() => nav(1), 1000); }
+    else { userArr.forEach(k => { const btn = document.getElementById(`mbtn-${k}`); if(!correctArr.includes(k)) btn.classList.add('wrong'); else btn.classList.add('correct'); }); correctArr.forEach(k => { const btn = document.getElementById(`mbtn-${k}`); if(!btn.classList.contains('correct')) btn.classList.add('correct'); }); handleResult(id, false); }
+}
+
+function checkTextAnswer(id, correctAns, type) {
+    const inputEl = document.getElementById(`input-${id}`); const feedbackEl = document.getElementById(`feedback-${id}`); const flashEl = document.getElementById(`flash-wrapper-${id}`); const explainEl = document.getElementById(`explain-${id}`); const btn = document.querySelector('.submit-btn');
+    let userVal = inputEl.value.trim(); if (!userVal) { alert("请输入内容后再提交！"); return; }
+    inputEl.disabled = true; btn.style.display = 'none'; let isRight = false; let normalize = (str) => str.toLowerCase().replace(/\s+/g, '').replace(/，/g,',').replace(/。/g,'.');
+    if (type === '填空题') { if (normalize(userVal) === normalize(correctAns)) isRight = true; }
+    else { const cleanCorrect = normalize(correctAns); const cleanUser = normalize(userVal); if (cleanCorrect.length < 10) { isRight = (cleanCorrect === cleanUser); } else { const chars = cleanCorrect.split(''); let matchCount = 0; chars.forEach(char => { if (cleanUser.includes(char)) matchCount++; }); if (matchCount / chars.length > 0.6) isRight = true; } }
+    
+    // 恢复底部栏显示（如果被隐藏了）
+    document.body.classList.remove('keyboard-open');
+
+    if (isRight) { inputEl.classList.add('inp-correct'); feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-success'; feedbackEl.innerHTML = `✅ 回答正确！`; if(explainEl) explainEl.style.display = 'block'; handleResult(id, true); setTimeout(() => nav(1), 1000); }
+    else { inputEl.classList.add('inp-wrong'); feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-error'; feedbackEl.innerHTML = `❌ 回答有误，请参考标准答案。`; if(flashEl) { flashEl.style.display = 'block'; flashEl.querySelector('.answer-reveal').style.display = 'block'; } if(explainEl) explainEl.style.display = 'block'; handleResult(id, false); }
+}
+
+function checkClozeAndSubmit(id) {
+    const answers = state.clozeMap[id]; const inputs = document.querySelectorAll(`#cloze-block-${id} .cloze-input`); const btn = document.querySelector('.submit-btn'); const feedbackEl = document.getElementById(`feedback-${id}`); const fullAnsEl = document.getElementById(`full-answer-${id}`);
+    let allCorrect = true;
+    inputs.forEach(inp => { const idx = inp.getAttribute('data-idx'); const correctVal = answers[idx]; const userVal = inp.value.trim(); if (userVal === correctVal) { inp.classList.add('cloze-correct'); inp.classList.remove('cloze-wrong'); } else { inp.classList.add('cloze-wrong'); inp.classList.remove('cloze-correct'); allCorrect = false; } inp.disabled = true; });
+    btn.style.display = 'none';
+    
+    // 恢复底部栏显示
+    document.body.classList.remove('keyboard-open');
+
+    if (allCorrect) { feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-success'; feedbackEl.innerHTML = `✅ 全部正确！太强了！`; handleResult(id, true); setTimeout(() => nav(1), 1000); }
+    else { feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-error'; feedbackEl.innerHTML = `❌ 存在错误，请对照完整代码复习。`; if(fullAnsEl) fullAnsEl.style.display = 'block'; handleResult(id, false); }
+}
+
+function handleResult(id, success) {
+    state.mistakes = state.mistakes.filter(x => x !== id); state.corrects = state.corrects.filter(x => x !== id);
+    if(success) state.corrects.push(id); else state.mistakes.push(id);
+    save(); renderGrid();
+}
+
+function nav(step) { const n = state.idx + step; if (n >= 0 && n < state.currentList.length) { state.idx = n; renderCard(); renderGrid(); } else if (n >= state.currentList.length) { alert('🎉 本组练习已完成！'); } }
+function jumpTo(i) { 
+    state.idx = i; 
+    // 手机跳转后自动收起菜单
+    if(window.innerWidth < 768) {
+        dom.sidebar.classList.remove('active');
+        dom.overlay.classList.remove('active');
+    }
+    renderCard(); renderGrid(); 
+}
+function resetAll() { if(confirm('确定要清空本章所有记录（错题本、进度、已掌握）吗？')) { localStorage.removeItem(storeKey); location.reload(); } }
+
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') { if (e.key === 'ArrowRight') nav(1); if (e.key === 'ArrowLeft') nav(-1); }
+    if (e.key === 'Enter') { if (e.target.tagName === 'TEXTAREA') { e.preventDefault(); const sub = document.querySelector('.submit-btn'); if(sub && sub.style.display !== 'none') sub.click(); } else { const sub = document.querySelector('.submit-btn'); if(sub && sub.offsetParent) sub.click(); } }
+    const q = state.currentList[state.idx];
+    if(q && !state.isShuffle && (q.type === '单选题' || q.type === '判断题')) { const map = {'1':0, '2':1, '3':2, '4':3}; if(map[e.key] !== undefined && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') { const opts = document.querySelectorAll('.opt-btn'); if(opts[map[e.key]]) opts[map[e.key]].click(); } }
+});
+
+init();
+</script>
+</body>
+</html>

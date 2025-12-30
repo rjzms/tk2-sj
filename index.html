@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>满分刷题基地</title>
+    <style>
+        body { margin: 0; padding: 0; background: #f0f2f5; font-family: "Microsoft YaHei", sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .header { margin-top: 60px; margin-bottom: 40px; text-align: center; }
+        .header h1 { color: #35495e; margin-bottom: 10px; }
+        .header p { color: #666; }
+        .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; width: 90%; max-width: 1200px; padding: 20px; }
+        .card { background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-decoration: none; color: #2c3e50; display: flex; flex-direction: column; align-items: center; text-align: center; transition: transform 0.2s; border: 2px solid transparent; }
+        .card:hover { transform: translateY(-5px); border-color: #42b883; }
+        .icon { font-size: 3rem; margin-bottom: 15px; }
+        .title { font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; }
+        .desc { font-size: 0.9rem; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>满分刷题基地</h1>
+        <p>选择科目，开始挑战</p>
+    </div>
+    <div class="container">
+        <a href="quiz.html?subject=vue" class="card"><div class="icon">⚡</div><div class="title">Vue.js 前端</div><div class="desc">126道精选真题</div></a>
+        <a href="quiz.html?subject=python" class="card"><div class="icon">🐍</div><div class="title">Python 编程</div><div class="desc">基础语法与算法</div></a>
+        <a href="quiz.html?subject=os" class="card"><div class="icon">💻</div><div class="title">操作系统</div><div class="desc">进程管理与内存</div></a>
+        <a href="quiz.html?subject=network" class="card"><div class="icon">🌐</div><div class="title">计算机网络</div><div class="desc">TCP/IP 协议栈</div></a>
+        <a href="quiz.html?subject=mcu" class="card"><div class="icon">📟</div><div class="title">单片机</div><div class="desc">51/STM32 开发</div></a>
+        <a href="quiz.html?subject=ds" class="card"><div class="icon">🌳</div><div class="title">数据结构</div><div class="desc">链表/树/图/排序</div></a>
+        <a href="quiz.html?subject=se" class="card"><div class="icon">🏗️</div><div class="title">软件工程</div><div class="desc">设计模式与维护</div></a>
+    </div>
+</body>
+</html>
+
+
