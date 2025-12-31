@@ -90,7 +90,9 @@
 
         .sidebar-footer { padding: 10px; border-top: 1px solid var(--border); text-align: center; font-size: 0.85rem; color: #909399; background: #fff; }
         .btn-reset { color: var(--text-sub); text-decoration: underline; cursor: pointer; border:none; background:none; display: block; margin: 5px auto; }
-        
+        .btn-force-reload { color: var(--danger); text-decoration: none; cursor: pointer; border: 1px solid #fde2e2; background:#fef0f0; display: block; margin: 10px auto; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem;}
+        .btn-force-reload:hover { background: var(--danger); color: white; }
+
         /* 新增/导出按钮样式 */
         .btn-action-group { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
         .btn-add { background: #67c23a; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; width: 100%; font-weight: bold; }
@@ -318,6 +320,7 @@
         <div class="sidebar-footer">
             <span id="stat-info">加载中...</span><br>
             <button class="btn-reset" onclick="resetAll()">重置本章进度</button>
+            <button class="btn-force-reload" onclick="forceReload()">🔄 强制重载题库 (清除本地修改)</button>
             <div class="btn-action-group">
                 <button class="btn-add" onclick="openAdd()">➕ 添加新题目</button>
                 <button class="btn-export" onclick="exportJSON()">📥 导出更新后的 JSON</button>
@@ -424,15 +427,18 @@ const dom = {
 
 async function init() {
     try {
-        // 优先加载本地存储的修改版题库
+        // 优先加载本地存储的修改版题库 (用户自己添加/修改的)
         const localDB = localStorage.getItem(storeKeyDB);
         if (localDB) {
             fullDB = JSON.parse(localDB);
+            console.log("Loaded from LocalStorage");
         } else {
+            // 如果本地没有，则加载服务器上的 JSON 文件
             const fileName = currentSubject + '.json';
             const response = await fetch(fileName + '?v=' + new Date().getTime());
             if (!response.ok) throw new Error(`无法找到题库文件: ${fileName}`);
             fullDB = await response.json();
+            console.log("Loaded from JSON file");
         }
         
         const saved = localStorage.getItem(storeKey);
@@ -642,6 +648,16 @@ function jumpTo(i) {
     renderCard(); renderGrid(); 
 }
 function resetAll() { if(confirm('确定要清空本章所有记录（错题本、进度、已掌握）吗？')) { localStorage.removeItem(storeKey); location.reload(); } }
+
+// === 新增：强制重载功能 ===
+function forceReload() {
+    if(confirm('⚠️ 警告：强制重载将清除您在当前设备上“新增”或“修改”的题目！\n\n系统将忽略本地缓存，并强制从服务器读取原始 JSON 文件。\n\n是否继续？')) {
+        // 关键点：移除存储“修改后题库”的 key
+        localStorage.removeItem(storeKeyDB); 
+        // 刷新页面，init() 函数会发现没有本地缓存，从而去 fetch 新文件
+        location.reload();
+    }
+}
 
 // === 编辑与添加功能逻辑 ===
 
