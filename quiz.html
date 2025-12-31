@@ -90,7 +90,13 @@
 
         .sidebar-footer { padding: 10px; border-top: 1px solid var(--border); text-align: center; font-size: 0.85rem; color: #909399; background: #fff; }
         .btn-reset { color: var(--text-sub); text-decoration: underline; cursor: pointer; border:none; background:none; display: block; margin: 5px auto; }
-        .btn-export { background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 0.8rem; width: 100%; }
+        
+        /* 新增/导出按钮样式 */
+        .btn-action-group { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
+        .btn-add { background: #67c23a; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; width: 100%; font-weight: bold; }
+        .btn-export { background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; width: 100%; }
+        .btn-add:hover { background: #85ce61; }
+        .btn-export:hover { opacity: 0.9; }
 
         .main-area {
             flex: 1; display: flex; flex-direction: column; position: relative;
@@ -312,7 +318,10 @@
         <div class="sidebar-footer">
             <span id="stat-info">加载中...</span><br>
             <button class="btn-reset" onclick="resetAll()">重置本章进度</button>
-            <button class="btn-export" onclick="exportJSON()">📥 导出更新后的 JSON</button>
+            <div class="btn-action-group">
+                <button class="btn-add" onclick="openAdd()">➕ 添加新题目</button>
+                <button class="btn-export" onclick="exportJSON()">📥 导出更新后的 JSON</button>
+            </div>
         </div>
     </aside>
 
@@ -341,10 +350,10 @@
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeEdit()">&times;</span>
-            <h3 style="margin-top:0;">✏️ 编辑题目</h3>
+            <h3 style="margin-top:0;" id="modal-title">✏️ 编辑题目</h3>
             <div class="edit-form-group">
                 <label>题目类型:</label>
-                <select id="edit-type">
+                <select id="edit-type" onchange="toggleOptsField()">
                     <option value="单选题">单选题</option>
                     <option value="多选题">多选题</option>
                     <option value="判断题">判断题</option>
@@ -355,24 +364,24 @@
             </div>
             <div class="edit-form-group">
                 <label>题干 (支持HTML):</label>
-                <textarea id="edit-q" rows="3"></textarea>
+                <textarea id="edit-q" rows="3" placeholder="例如：Vue中用于绑定事件的指令是？"></textarea>
             </div>
             <div class="edit-form-group" id="edit-opts-group">
-                <label>选项 (JSON格式，仅选择题需要):</label>
-                <textarea id="edit-opts" rows="4" style="font-family:monospace;font-size:0.9rem;"></textarea>
-                <div style="font-size:0.8rem;color:#999;">例如: {"A":"选项1", "B":"选项2"}</div>
+                <label>选项 (JSON格式，仅单选/多选需要):</label>
+                <textarea id="edit-opts" rows="4" style="font-family:monospace;font-size:0.9rem;" placeholder='例如: {"A":"v-on", "B":"v-bind"}'></textarea>
+                <div style="font-size:0.8rem;color:#999;">注意：键名必须大写(A,B,C...)，文本用双引号。</div>
             </div>
             <div class="edit-form-group">
                 <label>标准答案:</label>
-                <textarea id="edit-a" rows="2"></textarea>
+                <textarea id="edit-a" rows="2" placeholder="例如：A"></textarea>
             </div>
             <div class="edit-form-group">
                 <label>解析:</label>
-                <textarea id="edit-desc" rows="3"></textarea>
+                <textarea id="edit-desc" rows="3" placeholder="简要解释为什么选这个答案..."></textarea>
             </div>
             <div class="edit-actions">
                 <button class="btn-cancel" onclick="closeEdit()">取消</button>
-                <button class="btn-save" onclick="saveEdit()">💾 保存修改</button>
+                <button class="btn-save" onclick="saveEdit()">💾 保存</button>
             </div>
         </div>
     </div>
@@ -397,7 +406,8 @@ let fullDB = [];
 const state = {
     progress: {}, mistakes: [], corrects: [],
     mode: 'all', isShuffle: false,
-    currentList: [], multiTemp: [], clozeMap: {} 
+    currentList: [], multiTemp: [], clozeMap: {},
+    isAdding: false // 标记当前是否处于“添加模式”
 };
 
 const dom = {
@@ -408,7 +418,8 @@ const dom = {
     shuffleBtn: document.getElementById('shuffle-btn'),
     sidebar: document.getElementById('sidebar'),
     overlay: document.querySelector('.mobile-overlay'),
-    editModal: document.getElementById('edit-modal')
+    editModal: document.getElementById('edit-modal'),
+    modalTitle: document.getElementById('modal-title')
 };
 
 async function init() {
@@ -632,8 +643,19 @@ function jumpTo(i) {
 }
 function resetAll() { if(confirm('确定要清空本章所有记录（错题本、进度、已掌握）吗？')) { localStorage.removeItem(storeKey); location.reload(); } }
 
-// 编辑相关函数
+// === 编辑与添加功能逻辑 ===
+
+function toggleOptsField() {
+    const type = document.getElementById('edit-type').value;
+    const group = document.getElementById('edit-opts-group');
+    if (type === '单选题' || type === '多选题') group.style.display = 'block';
+    else group.style.display = 'none';
+}
+
 function openEdit() {
+    state.isAdding = false;
+    dom.modalTitle.innerText = "✏️ 编辑题目";
+    
     const q = state.currentList[state.idx];
     document.getElementById('edit-type').value = q.type;
     document.getElementById('edit-q').value = q.q;
@@ -643,52 +665,100 @@ function openEdit() {
     const optsArea = document.getElementById('edit-opts');
     if (q.opts) {
         optsArea.value = JSON.stringify(q.opts, null, 2);
-        document.getElementById('edit-opts-group').style.display = 'block';
     } else {
         optsArea.value = '{}';
-        document.getElementById('edit-opts-group').style.display = 'none';
     }
+    toggleOptsField();
+    dom.editModal.style.display = 'block';
+}
+
+function openAdd() {
+    state.isAdding = true;
+    dom.modalTitle.innerText = "➕ 添加新题目";
+    
+    // 清空表单
+    document.getElementById('edit-type').value = '单选题';
+    document.getElementById('edit-q').value = '';
+    document.getElementById('edit-a').value = '';
+    document.getElementById('edit-desc').value = '';
+    document.getElementById('edit-opts').value = '{\n  "A": "",\n  "B": "",\n  "C": "",\n  "D": ""\n}';
+    
+    toggleOptsField();
+    
+    if(window.innerWidth < 768) toggleSidebar(); // 手机上点击添加后关闭侧边栏
     dom.editModal.style.display = 'block';
 }
 
 function closeEdit() { dom.editModal.style.display = 'none'; }
 
 function saveEdit() {
-    const q = state.currentList[state.idx];
     const newType = document.getElementById('edit-type').value;
     const newQ = document.getElementById('edit-q').value;
     const newA = document.getElementById('edit-a').value;
     const newDesc = document.getElementById('edit-desc').value;
-    
-    // 更新内存中的对象
-    q.type = newType;
-    q.q = newQ;
-    q.a = newA;
-    q.desc = newDesc;
-    
-    // 尝试解析选项 JSON
-    const optsStr = document.getElementById('edit-opts').value;
-    try {
-        if(optsStr && optsStr.trim() !== '') {
-            q.opts = JSON.parse(optsStr);
-        }
-    } catch(e) {
-        alert('选项 JSON 格式错误，请检查！');
+    let newOpts = null;
+
+    if (!newQ || !newA) {
+        alert("题干和答案不能为空！");
         return;
     }
 
-    // 找到 fullDB 中对应的题目并更新
-    const dbIndex = fullDB.findIndex(item => item.id === q.id);
-    if(dbIndex !== -1) {
-        fullDB[dbIndex] = q;
+    // 尝试解析选项 JSON
+    const optsStr = document.getElementById('edit-opts').value;
+    if (newType === '单选题' || newType === '多选题') {
+        try {
+            if(optsStr && optsStr.trim() !== '') {
+                newOpts = JSON.parse(optsStr);
+            }
+        } catch(e) {
+            alert('选项 JSON 格式错误，请检查！(注意引号和逗号)');
+            return;
+        }
+    }
+
+    if (state.isAdding) {
+        // === 新增逻辑 ===
+        // 生成一个新ID：当前最大ID + 1
+        const maxId = fullDB.length > 0 ? Math.max(...fullDB.map(i => i.id)) : 0;
+        const newObj = {
+            id: maxId + 1,
+            type: newType,
+            q: newQ,
+            a: newA,
+            desc: newDesc
+        };
+        if (newOpts) newObj.opts = newOpts;
+        
+        fullDB.push(newObj);
+        
+        // 刷新列表，并跳转到最后一题
+        changeMode(state.mode); 
+        state.idx = state.currentList.length - 1;
+        
+    } else {
+        // === 编辑逻辑 ===
+        const q = state.currentList[state.idx];
+        q.type = newType;
+        q.q = newQ;
+        q.a = newA;
+        q.desc = newDesc;
+        if(newOpts) q.opts = newOpts;
+        else delete q.opts;
+
+        // 更新 fullDB
+        const dbIndex = fullDB.findIndex(item => item.id === q.id);
+        if(dbIndex !== -1) fullDB[dbIndex] = q;
     }
 
     // 保存到 LocalStorage (持久化修改)
     localStorage.setItem(storeKeyDB, JSON.stringify(fullDB));
 
     renderCard();
+    renderGrid();
     closeEdit();
-    alert('✅ 修改已保存！请记得在侧边栏导出并覆盖原文件。');
+    
+    const action = state.isAdding ? "添加" : "修改";
+    alert(`✅ ${action}成功！数据已更新到暂存区。\n\n请务必点击侧边栏底部的【📥 导出更新后的 JSON】\n并覆盖原文件，否则刷新页面后可能会丢失。`);
 }
 
 function exportJSON() {
