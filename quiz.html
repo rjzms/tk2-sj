@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>刷题 Pro</title>
     <style>
-        /* --- 基础变量 --- */
         :root {
             --primary: #42b883;
             --primary-dark: #33a06f;
@@ -29,13 +28,11 @@
             background: var(--bg-body);
             font-family: -apple-system, "Microsoft YaHei", sans-serif;
             color: var(--text-main);
-            /* PC端默认布局：全屏固定 */
             height: 100vh;
             display: flex;
             overflow: hidden;
         }
 
-        /* --- 侧边栏 (PC端) --- */
         .sidebar {
             width: var(--sidebar-w);
             background: #fff;
@@ -92,9 +89,9 @@
         .grid-item.done-err { background: #fef0f0; color: var(--danger); border-color: #fde2e2; }
 
         .sidebar-footer { padding: 10px; border-top: 1px solid var(--border); text-align: center; font-size: 0.85rem; color: #909399; background: #fff; }
-        .btn-reset { color: var(--text-sub); text-decoration: underline; cursor: pointer; border:none; background:none; }
+        .btn-reset { color: var(--text-sub); text-decoration: underline; cursor: pointer; border:none; background:none; display: block; margin: 5px auto; }
+        .btn-export { background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 0.8rem; width: 100%; }
 
-        /* --- 主内容区 (PC端) --- */
         .main-area {
             flex: 1; display: flex; flex-direction: column; position: relative;
         }
@@ -102,7 +99,6 @@
         .scroll-wrapper {
             flex: 1; overflow-y: auto; padding: 40px;
             display: flex; justify-content: center;
-            /* 增加底部留白，防止内容被底部栏遮挡 */
             padding-bottom: 100px; 
         }
 
@@ -112,14 +108,16 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             margin-bottom: 40px;
             animation: fadeIn 0.3s ease;
+            position: relative;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- 题目样式 --- */
         .q-header { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
         .tag { padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
         .tag-type { background: #e3fcf0; color: #166534; }
         .tag-err { background: #fee2e2; color: #991b1b; }
+        .btn-edit { background: none; border: 1px solid #dcdfe6; color: #606266; cursor: pointer; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; margin-left: 10px; }
+        .btn-edit:hover { border-color: var(--primary); color: var(--primary); }
         
         .q-body { 
             font-size: 1.3rem; font-weight: 600; line-height: 1.6;
@@ -134,7 +132,7 @@
             text-align: left; display: flex; word-break: break-all;
             transition: background 0.1s;
         }
-        .opt-btn:active { background: #f0f0f0; } /* 移动端触摸反馈 */
+        .opt-btn:active { background: #f0f0f0; }
         .opt-key { font-weight: bold; min-width: 30px; color: var(--secondary); flex-shrink: 0; }
         .opt-val { flex: 1; line-height: 1.5; }
         
@@ -184,7 +182,6 @@
             line-height: 1.6; display: none; word-break: break-word;
         }
 
-        /* --- 底部控制条 --- */
         .control-bar {
             background: #fff; border-top: 1px solid var(--border);
             padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;
@@ -206,7 +203,6 @@
             font-size: 1.1rem; cursor: pointer; font-weight: bold;
         }
 
-        /* --- 移动端汉堡菜单按钮 --- */
         .mobile-header { display: none; }
         .menu-btn { font-size: 1.5rem; cursor: pointer; color: white; }
         .mobile-overlay {
@@ -214,18 +210,28 @@
             background: rgba(0,0,0,0.5); z-index: 18;
         }
 
-        /* ================= 移动端适配 (核心修改) ================= */
+        /* 模态框样式 */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-modal:hover, .close-modal:focus { color: black; text-decoration: none; cursor: pointer; }
+        .edit-form-group { margin-bottom: 15px; }
+        .edit-form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .edit-form-group textarea, .edit-form-group input, .edit-form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
+        .edit-actions { text-align: right; margin-top: 20px; }
+        .btn-save { background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-cancel { background: #f4f4f5; color: #606266; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
-                height: auto; /* 允许页面自然滚动 */
+                height: auto; 
                 min-height: 100vh;
-                overflow-y: auto; /* 启用原生滚动，解决键盘遮挡 */
-                padding-top: var(--header-h-mobile); /* 为顶部栏留空 */
-                padding-bottom: 70px; /* 为底部控制条留空 */
+                overflow-y: auto; 
+                padding-top: var(--header-h-mobile); 
+                padding-bottom: 70px; 
             }
 
-            /* 1. 移动端顶部栏 */
             .mobile-header {
                 display: flex; align-items: center; padding: 0 15px;
                 height: var(--header-h-mobile); background: var(--secondary);
@@ -234,7 +240,6 @@
             }
             .mobile-title { color: white; font-weight: bold; margin-left: 15px; font-size: 1.1rem; }
 
-            /* 2. 侧边栏改为抽屉 */
             .sidebar {
                 position: fixed; top: 0; left: -100%; height: 100vh;
                 width: 80%; max-width: 300px;
@@ -244,31 +249,26 @@
             .sidebar.active { left: 0; }
             .mobile-overlay.active { display: block; }
 
-            /* 3. 主内容区调整 */
             .main-area { flex: none; width: 100%; }
             .scroll-wrapper { 
-                overflow: visible; /* 取消内部滚动，使用body滚动 */
+                overflow: visible; 
                 padding: 15px; 
                 padding-bottom: 0;
             }
             .card { padding: 20px; margin-bottom: 20px; }
             
-            /* 4. 底部控制条 (固定底部) */
             .control-bar {
                 position: fixed; bottom: 0; left: 0; width: 100%;
                 padding: 10px 15px;
-                transition: transform 0.3s; /* 用于键盘弹出时隐藏 */
+                transition: transform 0.3s; 
             }
-            /* 键盘弹出辅助类：隐藏底部条 */
             body.keyboard-open .control-bar { transform: translateY(100%); }
             
-            .hint { display: none; } /* 手机上不显示快捷键提示 */
+            .hint { display: none; } 
             
-            /* 字体大小调整 */
             .q-body { font-size: 1.15rem; }
             .opt-btn { padding: 12px 15px; font-size: 1rem; }
             
-            /* 代码块优化 */
             .code-block { font-size: 0.8rem; padding: 10px; }
             .cloze-input { min-width: 30px; font-size: 0.85rem; }
         }
@@ -312,6 +312,7 @@
         <div class="sidebar-footer">
             <span id="stat-info">加载中...</span><br>
             <button class="btn-reset" onclick="resetAll()">重置本章进度</button>
+            <button class="btn-export" onclick="exportJSON()">📥 导出更新后的 JSON</button>
         </div>
     </aside>
 
@@ -337,12 +338,50 @@
         </div>
     </main>
 
-<script>
-// ================= 核心逻辑：GitHub 适配版 =================
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeEdit()">&times;</span>
+            <h3 style="margin-top:0;">✏️ 编辑题目</h3>
+            <div class="edit-form-group">
+                <label>题目类型:</label>
+                <select id="edit-type">
+                    <option value="单选题">单选题</option>
+                    <option value="多选题">多选题</option>
+                    <option value="判断题">判断题</option>
+                    <option value="填空题">填空题</option>
+                    <option value="简答题">简答题</option>
+                    <option value="操作题">操作题</option>
+                </select>
+            </div>
+            <div class="edit-form-group">
+                <label>题干 (支持HTML):</label>
+                <textarea id="edit-q" rows="3"></textarea>
+            </div>
+            <div class="edit-form-group" id="edit-opts-group">
+                <label>选项 (JSON格式，仅选择题需要):</label>
+                <textarea id="edit-opts" rows="4" style="font-family:monospace;font-size:0.9rem;"></textarea>
+                <div style="font-size:0.8rem;color:#999;">例如: {"A":"选项1", "B":"选项2"}</div>
+            </div>
+            <div class="edit-form-group">
+                <label>标准答案:</label>
+                <textarea id="edit-a" rows="2"></textarea>
+            </div>
+            <div class="edit-form-group">
+                <label>解析:</label>
+                <textarea id="edit-desc" rows="3"></textarea>
+            </div>
+            <div class="edit-actions">
+                <button class="btn-cancel" onclick="closeEdit()">取消</button>
+                <button class="btn-save" onclick="saveEdit()">💾 保存修改</button>
+            </div>
+        </div>
+    </div>
 
+<script>
 const urlParams = new URLSearchParams(window.location.search);
 const currentSubject = urlParams.get('subject') || 'vue';
 const storeKey = 'quiz_pro_v2_' + currentSubject; 
+const storeKeyDB = 'quiz_pro_db_' + currentSubject; // 用于存储修改后的题库
 
 const subjectMap = {
     'vue': 'Vue.js', 'python': 'Python', 'os': '操作系统', 'network': '计算机网络',
@@ -351,7 +390,7 @@ const subjectMap = {
 const titleText = (subjectMap[currentSubject] || currentSubject) + ' 刷题 Pro';
 document.title = titleText;
 document.querySelector('.brand-title').innerText = titleText;
-document.querySelector('.mobile-title').innerText = titleText; // 移动端标题
+document.querySelector('.mobile-title').innerText = titleText;
 
 let fullDB = []; 
 
@@ -368,15 +407,22 @@ const dom = {
     modes: document.querySelectorAll('.mode-item'),
     shuffleBtn: document.getElementById('shuffle-btn'),
     sidebar: document.getElementById('sidebar'),
-    overlay: document.querySelector('.mobile-overlay')
+    overlay: document.querySelector('.mobile-overlay'),
+    editModal: document.getElementById('edit-modal')
 };
 
 async function init() {
     try {
-        const fileName = currentSubject + '.json';
-        const response = await fetch(fileName + '?v=' + new Date().getTime());
-        if (!response.ok) throw new Error(`无法找到题库文件: ${fileName}`);
-        fullDB = await response.json();
+        // 优先加载本地存储的修改版题库
+        const localDB = localStorage.getItem(storeKeyDB);
+        if (localDB) {
+            fullDB = JSON.parse(localDB);
+        } else {
+            const fileName = currentSubject + '.json';
+            const response = await fetch(fileName + '?v=' + new Date().getTime());
+            if (!response.ok) throw new Error(`无法找到题库文件: ${fileName}`);
+            fullDB = await response.json();
+        }
         
         const saved = localStorage.getItem(storeKey);
         if (saved) {
@@ -438,7 +484,7 @@ function changeMode(mode) {
         state.idx = 0;
         if(state.currentList.length === 0) {
             dom.cardArea.innerHTML = `<div style="text-align:center;padding:50px;color:#999;">🎉 错题本是空的！太棒了！</div>`;
-            renderGrid(); toggleSidebar(); return; // 切换模式后自动关闭侧边栏
+            renderGrid(); toggleSidebar(); return; 
         }
     } else {
         let savedIdx = state.progress[mode] || 0;
@@ -446,7 +492,6 @@ function changeMode(mode) {
         state.idx = savedIdx;
     }
     
-    // 手机上切换模式后自动关闭侧边栏
     if(window.innerWidth < 768 && dom.sidebar.classList.contains('active')) toggleSidebar();
     
     renderCard(); renderGrid(); updateUI();
@@ -476,14 +521,13 @@ function renderCard() {
     const total = state.currentList.length;
     let safeQ = formatText(q.q);
     
-    // 更新移动端底部进度
     const mobProg = document.getElementById('mobile-progress');
     if(mobProg) mobProg.innerText = `${state.idx + 1} / ${total}`;
 
-    let html = `<div class="q-header"><span class="tag tag-type">${q.type}</span>${isMistake ? '<span class="tag tag-err">错题本</span>' : ''}<span style="color:#aaa;margin-left:auto;font-size:0.9rem;">${state.idx + 1} / ${total}</span></div><div class="q-body">${q.id}. ${safeQ}</div>`;
+    let html = `<div class="q-header"><span class="tag tag-type">${q.type}</span>${isMistake ? '<span class="tag tag-err">错题本</span>' : ''}<button class="btn-edit" onclick="openEdit()">✏️ 编辑</button><span style="color:#aaa;margin-left:auto;font-size:0.9rem;">${state.idx + 1} / ${total}</span></div><div class="q-body">${q.id}. ${safeQ}</div>`;
 
     if (q.type === '单选题') {
-        let opts = Object.entries(q.opts); if(state.isShuffle) opts = shuffleArray(opts);
+        let opts = Object.entries(q.opts || {}); if(state.isShuffle) opts = shuffleArray(opts);
         html += `<div class="opt-group">`;
         opts.forEach(([k, v]) => { html += `<div class="opt-btn" onclick="checkOne(this, '${k}', '${q.a}', ${q.id})"><span class="opt-key">${k}.</span><span class="opt-val">${formatText(v)}</span></div>`; });
         html += `</div>` + renderDesc(q);
@@ -493,7 +537,7 @@ function renderCard() {
         opts.forEach(opt => { html += `<div class="opt-btn" onclick="checkOne(this, '${opt}', '${q.a}', ${q.id})"><span class="opt-val" style="text-align:center;font-weight:bold;">${opt}</span></div>`; });
         html += `</div>` + renderDesc(q);
     } else if (q.type === '多选题') {
-        state.multiTemp = []; let opts = Object.entries(q.opts); if(state.isShuffle) opts = shuffleArray(opts);
+        state.multiTemp = []; let opts = Object.entries(q.opts || {}); if(state.isShuffle) opts = shuffleArray(opts);
         html += `<div class="opt-group">`;
         opts.forEach(([k, v]) => { html += `<div class="opt-btn" id="mbtn-${k}" onclick="toggleMulti('${k}')"><span class="opt-key">${k}.</span><span class="opt-val">${formatText(v)}</span></div>`; });
         html += `</div><button class="submit-btn" onclick="checkMulti(${q.id}, '${q.a}')">提交答案 (Enter)</button>` + renderDesc(q);
@@ -505,9 +549,7 @@ function renderCard() {
     }
     dom.cardArea.innerHTML = html;
     
-    // 自动聚焦与键盘优化
     const focusHandler = (el) => {
-        // 手机端：输入框获取焦点时，隐藏底部导航条，防止遮挡
         if(window.innerWidth < 768) {
             el.addEventListener('focus', () => document.body.classList.add('keyboard-open'));
             el.addEventListener('blur', () => document.body.classList.remove('keyboard-open'));
@@ -524,7 +566,6 @@ function renderCard() {
         if(el) focusHandler(el);
     }
     
-    // 滚动到顶部 (手机端体验更好)
     if(window.innerWidth < 768) window.scrollTo(0, 0);
     
     save();
@@ -556,7 +597,6 @@ function checkTextAnswer(id, correctAns, type) {
     if (type === '填空题') { if (normalize(userVal) === normalize(correctAns)) isRight = true; }
     else { const cleanCorrect = normalize(correctAns); const cleanUser = normalize(userVal); if (cleanCorrect.length < 10) { isRight = (cleanCorrect === cleanUser); } else { const chars = cleanCorrect.split(''); let matchCount = 0; chars.forEach(char => { if (cleanUser.includes(char)) matchCount++; }); if (matchCount / chars.length > 0.6) isRight = true; } }
     
-    // 恢复底部栏显示（如果被隐藏了）
     document.body.classList.remove('keyboard-open');
 
     if (isRight) { inputEl.classList.add('inp-correct'); feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-success'; feedbackEl.innerHTML = `✅ 回答正确！`; if(explainEl) explainEl.style.display = 'block'; handleResult(id, true); setTimeout(() => nav(1), 1000); }
@@ -569,7 +609,6 @@ function checkClozeAndSubmit(id) {
     inputs.forEach(inp => { const idx = inp.getAttribute('data-idx'); const correctVal = answers[idx]; const userVal = inp.value.trim(); if (userVal === correctVal) { inp.classList.add('cloze-correct'); inp.classList.remove('cloze-wrong'); } else { inp.classList.add('cloze-wrong'); inp.classList.remove('cloze-correct'); allCorrect = false; } inp.disabled = true; });
     btn.style.display = 'none';
     
-    // 恢复底部栏显示
     document.body.classList.remove('keyboard-open');
 
     if (allCorrect) { feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-success'; feedbackEl.innerHTML = `✅ 全部正确！太强了！`; handleResult(id, true); setTimeout(() => nav(1), 1000); }
@@ -585,7 +624,6 @@ function handleResult(id, success) {
 function nav(step) { const n = state.idx + step; if (n >= 0 && n < state.currentList.length) { state.idx = n; renderCard(); renderGrid(); } else if (n >= state.currentList.length) { alert('🎉 本组练习已完成！'); } }
 function jumpTo(i) { 
     state.idx = i; 
-    // 手机跳转后自动收起菜单
     if(window.innerWidth < 768) {
         dom.sidebar.classList.remove('active');
         dom.overlay.classList.remove('active');
@@ -594,7 +632,82 @@ function jumpTo(i) {
 }
 function resetAll() { if(confirm('确定要清空本章所有记录（错题本、进度、已掌握）吗？')) { localStorage.removeItem(storeKey); location.reload(); } }
 
+// 编辑相关函数
+function openEdit() {
+    const q = state.currentList[state.idx];
+    document.getElementById('edit-type').value = q.type;
+    document.getElementById('edit-q').value = q.q;
+    document.getElementById('edit-a').value = q.a;
+    document.getElementById('edit-desc').value = q.desc || '';
+    
+    const optsArea = document.getElementById('edit-opts');
+    if (q.opts) {
+        optsArea.value = JSON.stringify(q.opts, null, 2);
+        document.getElementById('edit-opts-group').style.display = 'block';
+    } else {
+        optsArea.value = '{}';
+        document.getElementById('edit-opts-group').style.display = 'none';
+    }
+    dom.editModal.style.display = 'block';
+}
+
+function closeEdit() { dom.editModal.style.display = 'none'; }
+
+function saveEdit() {
+    const q = state.currentList[state.idx];
+    const newType = document.getElementById('edit-type').value;
+    const newQ = document.getElementById('edit-q').value;
+    const newA = document.getElementById('edit-a').value;
+    const newDesc = document.getElementById('edit-desc').value;
+    
+    // 更新内存中的对象
+    q.type = newType;
+    q.q = newQ;
+    q.a = newA;
+    q.desc = newDesc;
+    
+    // 尝试解析选项 JSON
+    const optsStr = document.getElementById('edit-opts').value;
+    try {
+        if(optsStr && optsStr.trim() !== '') {
+            q.opts = JSON.parse(optsStr);
+        }
+    } catch(e) {
+        alert('选项 JSON 格式错误，请检查！');
+        return;
+    }
+
+    // 找到 fullDB 中对应的题目并更新
+    const dbIndex = fullDB.findIndex(item => item.id === q.id);
+    if(dbIndex !== -1) {
+        fullDB[dbIndex] = q;
+    }
+
+    // 保存到 LocalStorage (持久化修改)
+    localStorage.setItem(storeKeyDB, JSON.stringify(fullDB));
+
+    renderCard();
+    closeEdit();
+    alert('✅ 修改已保存！请记得在侧边栏导出并覆盖原文件。');
+}
+
+function exportJSON() {
+    const dataStr = JSON.stringify(fullDB, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentSubject + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// 快捷键
 document.addEventListener('keydown', (e) => {
+    if(dom.editModal.style.display === 'block') return; // 编辑模式下禁用快捷键
     if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') { if (e.key === 'ArrowRight') nav(1); if (e.key === 'ArrowLeft') nav(-1); }
     if (e.key === 'Enter') { if (e.target.tagName === 'TEXTAREA') { e.preventDefault(); const sub = document.querySelector('.submit-btn'); if(sub && sub.style.display !== 'none') sub.click(); } else { const sub = document.querySelector('.submit-btn'); if(sub && sub.offsetParent) sub.click(); } }
     const q = state.currentList[state.idx];
