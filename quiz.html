@@ -44,11 +44,23 @@
         }
 
         .brand-area {
-            padding: 20px;
-            background: var(--secondary);
-            color: white;
-            flex-shrink: 0;
-        }
+    padding: 20px;
+    
+    /* --- 核心修改：高级渐变背景 --- */
+    /* 使用 135度线性渐变，从原本的深蓝灰平滑过渡到稍深一点的色调 */
+    /* 这种微弱的明暗变化能产生“光线投射”的立体感，比纯色看起来更精致 */
+    background: linear-gradient(135deg, var(--secondary) 0%, #2c3e50 100%);
+    
+    color: white;
+    flex-shrink: 0;
+    
+    /* --- 细节优化 --- */
+    /* 底部增加一条半透明的亮线，产生“玻璃边缘”的精致感 */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    
+    /* 给文字加一点点柔和的阴影，让它在渐变背景上更清晰、更有质感 */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
         .brand-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
         .brand-sub { font-size: 0.8rem; opacity: 0.8; }
         .nav-home { text-decoration: none; color: #fff; font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; display: inline-block; opacity: 0.9; }
@@ -804,4 +816,5 @@ init();
 </script>
 </body>
 </html>
+
 
