@@ -33,6 +33,7 @@
             overflow: hidden;
         }
 
+        /* --- 侧边栏 --- */
         .sidebar {
             width: var(--sidebar-w);
             background: #fff;
@@ -43,26 +44,40 @@
             transition: transform 0.3s ease;
         }
 
+        /* 要求的图三：高级渐变效果 + 动态进度 */
         .brand-area {
-    padding: 20px;
-    
-    /* --- 核心修改：高级渐变背景 --- */
-    /* 使用 135度线性渐变，从原本的深蓝灰平滑过渡到稍深一点的色调 */
-    /* 这种微弱的明暗变化能产生“光线投射”的立体感，比纯色看起来更精致 */
-    background: linear-gradient(135deg, var(--secondary) 0%, #2c3e50 100%);
-    
-    color: white;
-    flex-shrink: 0;
-    
-    /* --- 细节优化 --- */
-    /* 底部增加一条半透明的亮线，产生“玻璃边缘”的精致感 */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    
-    /* 给文字加一点点柔和的阴影，让它在渐变背景上更清晰、更有质感 */
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-        .brand-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
-        .brand-sub { font-size: 0.8rem; opacity: 0.8; }
+            padding: 20px;
+            /* 默认深色背景 */
+            background: #2c3e50;
+            color: white;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        /* 进度条层：使用伪元素实现动态宽度 */
+        .brand-area::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: var(--progress, 0%); /* 动态变量 */
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: -1;
+            opacity: 0.9;
+        }
+        /* 装饰光效 */
+        .brand-area::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .brand-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .brand-sub { font-size: 0.8rem; opacity: 0.9; }
         .nav-home { text-decoration: none; color: #fff; font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; display: inline-block; opacity: 0.9; }
 
         .sidebar-controls { padding: 10px; border-bottom: 1px solid var(--border); background: #f8f9fa; }
@@ -105,13 +120,13 @@
         .btn-force-reload { color: var(--danger); text-decoration: none; cursor: pointer; border: 1px solid #fde2e2; background:#fef0f0; display: block; margin: 10px auto; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem;}
         .btn-force-reload:hover { background: var(--danger); color: white; }
 
-        /* 新增/导出按钮样式 */
         .btn-action-group { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
         .btn-add { background: #67c23a; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; width: 100%; font-weight: bold; }
         .btn-export { background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; width: 100%; }
         .btn-add:hover { background: #85ce61; }
         .btn-export:hover { opacity: 0.9; }
 
+        /* --- 主内容区 --- */
         .main-area {
             flex: 1; display: flex; flex-direction: column; position: relative;
         }
@@ -119,7 +134,8 @@
         .scroll-wrapper {
             flex: 1; overflow-y: auto; padding: 40px;
             display: flex; justify-content: center;
-            padding-bottom: 100px; 
+            /* 手机端输入时增加底部留白，防止被键盘遮挡 */
+            padding-bottom: 120px; 
         }
 
         .card {
@@ -132,13 +148,20 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .q-header { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
+        .q-header { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; position: relative; }
         .tag { padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
         .tag-type { background: #e3fcf0; color: #166534; }
         .tag-err { background: #fee2e2; color: #991b1b; }
         .btn-edit { background: none; border: 1px solid #dcdfe6; color: #606266; cursor: pointer; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; margin-left: 10px; }
         .btn-edit:hover { border-color: var(--primary); color: var(--primary); }
         
+        /* 要求的背题模式开关 */
+        .recite-toggle-wrapper { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #606266; cursor: pointer; user-select: none; }
+        .toggle-switch { width: 40px; height: 20px; background: #dcdfe6; border-radius: 10px; position: relative; transition: 0.3s; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: 0.3s; }
+        .recite-active .toggle-switch { background: var(--primary); }
+        .recite-active .toggle-switch::after { left: 22px; }
+
         .q-body { 
             font-size: 1.3rem; font-weight: 600; line-height: 1.6;
             margin-bottom: 30px; border-bottom: 1px solid #f0f0f0;
@@ -171,6 +194,15 @@
         .text-input:focus { border-color: var(--primary); }
         .text-input.inp-correct { border-color: var(--success); background: #f0f9eb; color: #166534; }
         .text-input.inp-wrong { border-color: var(--danger); background: #fef0f0; color: #991b1b; }
+
+        /* 背题模式遮罩 */
+        .recite-mask {
+            background: #fdfdfd; border: 2px dashed #dcdfe6; border-radius: 8px;
+            padding: 40px; text-align: center; color: #999; cursor: pointer;
+            font-size: 1.1rem; display: none;
+        }
+        .recite-mask:hover { border-color: var(--primary); color: var(--primary); background: #f0fdf9; }
+        .recite-content { display: none; margin-top: 20px; }
 
         .input-feedback { margin-top: 15px; padding: 15px; border-radius: 6px; font-weight: bold; display: none; }
         .feedback-success { background: #f0f9eb; color: #67c23a; border: 1px solid #b3e19d; }
@@ -242,6 +274,7 @@
         .btn-save { background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-cancel { background: #f4f4f5; color: #606266; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
 
+        /* 适配移动端 */
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
@@ -273,7 +306,8 @@
             .scroll-wrapper { 
                 overflow: visible; 
                 padding: 15px; 
-                padding-bottom: 0;
+                /* 关键：增加底部留白，防止输入法遮挡提交按钮 */
+                padding-bottom: 50px;
             }
             .card { padding: 20px; margin-bottom: 20px; }
             
@@ -281,7 +315,9 @@
                 position: fixed; bottom: 0; left: 0; width: 100%;
                 padding: 10px 15px;
                 transition: transform 0.3s; 
+                background: rgba(255,255,255,0.95);
             }
+            /* 输入框激活时隐藏底部栏 */
             body.keyboard-open .control-bar { transform: translateY(100%); }
             
             .hint { display: none; } 
@@ -407,10 +443,17 @@ const currentSubject = urlParams.get('subject') || 'vue';
 const storeKey = 'quiz_pro_v2_' + currentSubject; 
 const storeKeyDB = 'quiz_pro_db_' + currentSubject; // 用于存储修改后的题库
 
-const subjectMap = {
+// 扩展：支持自定义科目
+let subjectMap = {
     'vue': 'Vue.js', 'python': 'Python', 'os': '操作系统', 'network': '计算机网络',
     'mcu': '单片机', 'ds': '数据结构', 'se': '软件工程'
 };
+
+// 尝试从 LocalStorage 加载自定义科目列表以更新标题
+const customSubs = JSON.parse(localStorage.getItem('my_subjects') || '[]');
+const customSub = customSubs.find(s => s.id === currentSubject);
+if(customSub) subjectMap[currentSubject] = customSub.name;
+
 const titleText = (subjectMap[currentSubject] || currentSubject) + ' 刷题 Pro';
 document.title = titleText;
 document.querySelector('.brand-title').innerText = titleText;
@@ -422,7 +465,8 @@ const state = {
     progress: {}, mistakes: [], corrects: [],
     mode: 'all', isShuffle: false,
     currentList: [], multiTemp: [], clozeMap: {},
-    isAdding: false // 标记当前是否处于“添加模式”
+    isAdding: false,
+    reciteMode: false // 背题模式状态
 };
 
 const dom = {
@@ -434,23 +478,31 @@ const dom = {
     sidebar: document.getElementById('sidebar'),
     overlay: document.querySelector('.mobile-overlay'),
     editModal: document.getElementById('edit-modal'),
-    modalTitle: document.getElementById('modal-title')
+    modalTitle: document.getElementById('modal-title'),
+    brandArea: document.querySelector('.brand-area')
 };
 
 async function init() {
     try {
-        // 优先加载本地存储的修改版题库 (用户自己添加/修改的)
+        // 优先加载本地存储的修改版题库
         const localDB = localStorage.getItem(storeKeyDB);
         if (localDB) {
             fullDB = JSON.parse(localDB);
             console.log("Loaded from LocalStorage");
         } else {
-            // 如果本地没有，则加载服务器上的 JSON 文件
-            const fileName = currentSubject + '.json';
-            const response = await fetch(fileName + '?v=' + new Date().getTime());
-            if (!response.ok) throw new Error(`无法找到题库文件: ${fileName}`);
-            fullDB = await response.json();
-            console.log("Loaded from JSON file");
+            // 尝试加载服务器文件，如果失败（可能是自定义科目），检查是否仅存在于 localStorage
+            try {
+                const fileName = currentSubject + '.json';
+                const response = await fetch(fileName + '?v=' + new Date().getTime());
+                if (!response.ok) throw new Error(`无法找到题库文件: ${fileName}`);
+                fullDB = await response.json();
+                console.log("Loaded from JSON file");
+            } catch (e) {
+                // 如果是自定义科目但没有被正确保存到 localDB，这里可能会报错，提示用户
+                if (!localDB && !subjectMap[currentSubject] && !customSub) {
+                    throw e; 
+                }
+            }
         }
         
         const saved = localStorage.getItem(storeKey);
@@ -467,7 +519,7 @@ async function init() {
         updateShuffleUI();
         changeMode(state.mode);
     } catch (e) {
-        dom.cardArea.innerHTML = `<div style="text-align:center;padding:50px;color:red;"><h2>❌ 题库加载失败</h2><p>找不到文件: <b>${currentSubject}.json</b></p></div>`;
+        dom.cardArea.innerHTML = `<div style="text-align:center;padding:50px;color:red;"><h2>❌ 题库加载失败</h2><p>找不到文件或数据: <b>${currentSubject}</b></p></div>`;
         dom.statInfo.innerText = "加载失败";
     }
 }
@@ -526,6 +578,22 @@ function changeMode(mode) {
     renderCard(); renderGrid(); updateUI();
 }
 
+// 切换背题模式
+function toggleReciteMode() {
+    state.reciteMode = !state.reciteMode;
+    renderCard(); // 重新渲染当前卡片以应用新模式
+}
+
+// 渲染背题模式开关按钮
+function renderReciteToggle() {
+    const activeClass = state.reciteMode ? 'recite-active' : '';
+    const text = state.reciteMode ? '背题模式' : '输入模式';
+    return `<div class="recite-toggle-wrapper ${activeClass}" onclick="toggleReciteMode()">
+                <span>${text}</span>
+                <div class="toggle-switch"></div>
+            </div>`;
+}
+
 function createClozeMode(codeText) {
     const tokens = codeText.split(/([a-zA-Z0-9_$]+)/g);
     const validIndices = [];
@@ -553,7 +621,17 @@ function renderCard() {
     const mobProg = document.getElementById('mobile-progress');
     if(mobProg) mobProg.innerText = `${state.idx + 1} / ${total}`;
 
-    let html = `<div class="q-header"><span class="tag tag-type">${q.type}</span>${isMistake ? '<span class="tag tag-err">错题本</span>' : ''}<button class="btn-edit" onclick="openEdit()">✏️ 编辑</button><span style="color:#aaa;margin-left:auto;font-size:0.9rem;">${state.idx + 1} / ${total}</span></div><div class="q-body">${q.id}. ${safeQ}</div>`;
+    // 只有填空题和简答题才显示背题模式开关
+    let toggleHtml = (q.type === '填空题' || q.type === '简答题') ? renderReciteToggle() : '';
+    
+    let html = `<div class="q-header">
+                    <span class="tag tag-type">${q.type}</span>
+                    ${isMistake ? '<span class="tag tag-err">错题本</span>' : ''}
+                    <button class="btn-edit" onclick="openEdit()">✏️ 编辑</button>
+                    ${toggleHtml}
+                    <span style="color:#aaa;margin-left:10px;font-size:0.9rem;">${state.idx + 1} / ${total}</span>
+                </div>
+                <div class="q-body">${q.id}. ${safeQ}</div>`;
 
     if (q.type === '单选题') {
         let opts = Object.entries(q.opts || {}); if(state.isShuffle) opts = shuffleArray(opts);
@@ -571,13 +649,29 @@ function renderCard() {
         opts.forEach(([k, v]) => { html += `<div class="opt-btn" id="mbtn-${k}" onclick="toggleMulti('${k}')"><span class="opt-key">${k}.</span><span class="opt-val">${formatText(v)}</span></div>`; });
         html += `</div><button class="submit-btn" onclick="checkMulti(${q.id}, '${q.a}')">提交答案 (Enter)</button>` + renderDesc(q);
     } else if (q.type === '填空题' || q.type === '简答题') {
-        html += `<div class="input-box-area"><textarea id="input-${q.id}" class="text-input" placeholder="请输入你的答案..."></textarea><button class="submit-btn" onclick="checkTextAnswer(${q.id}, \`${q.a.replace(/`/g, '\\`')}\`, '${q.type}')">提交答案 (Enter)</button><div id="feedback-${q.id}" class="input-feedback"></div></div><div id="flash-wrapper-${q.id}" style="display:none"><div class="flashcard-box" onclick="this.querySelector('.answer-reveal').style.display='block';this.style.cursor='default';"><div style="font-weight:bold;color:#409eff;margin-bottom:10px;">参考答案</div><div class="answer-reveal"><div style="font-size:1.1rem;line-height:1.6;color:#2c3e50;">${formatText(q.a).replace(/\n/g, '<br>')}</div></div></div></div>` + renderDesc(q);
+        if (state.reciteMode) {
+            // 背题模式：隐藏输入框，显示遮罩
+            html += `<div class="recite-mask" onclick="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                        👁️ 点击查看答案与解析
+                     </div>
+                     <div class="recite-content">
+                        <div class="flashcard-box" style="cursor:default; background:#f0f9eb; border-color:#e1f3d8;">
+                            <div style="font-weight:bold;color:#166534;margin-bottom:10px;">参考答案</div>
+                            <div style="font-size:1.1rem;line-height:1.6;color:#2c3e50;">${formatText(q.a).replace(/\n/g, '<br>')}</div>
+                        </div>
+                        ${renderDesc(q, true)}
+                     </div>`;
+        } else {
+            // 输入模式
+            html += `<div class="input-box-area"><textarea id="input-${q.id}" class="text-input" placeholder="请输入你的答案..."></textarea><button class="submit-btn" onclick="checkTextAnswer(${q.id}, \`${q.a.replace(/`/g, '\\`')}\`, '${q.type}')">提交答案 (Enter)</button><div id="feedback-${q.id}" class="input-feedback"></div></div><div id="flash-wrapper-${q.id}" style="display:none"><div class="flashcard-box" onclick="this.querySelector('.answer-reveal').style.display='block';this.style.cursor='default';"><div style="font-weight:bold;color:#409eff;margin-bottom:10px;">参考答案</div><div class="answer-reveal"><div style="font-size:1.1rem;line-height:1.6;color:#2c3e50;">${formatText(q.a).replace(/\n/g, '<br>')}</div></div></div></div>` + renderDesc(q);
+        }
     } else if (q.type === '操作题') {
         const { html: clozeHtml, answers } = createClozeMode(q.a); state.clozeMap[q.id] = answers;
         html += `<div style="margin-bottom:15px;color:#666;font-size:0.9rem;">请在代码中填写缺失的关键词：</div><pre class="code-block" id="cloze-block-${q.id}">${clozeHtml}</pre><button class="submit-btn" onclick="checkClozeAndSubmit(${q.id})">提交答案 (Enter)</button><div id="feedback-${q.id}" class="input-feedback"></div><div id="full-answer-${q.id}" style="display:none; margin-top:20px;"><div class="flashcard-box" style="padding:20px; text-align:left; border-color:#f56c6c; background:#fef0f0;"><div style="font-weight:bold;color:#f56c6c;margin-bottom:10px;text-align:center;">❌ 完整参考代码</div><pre class="code-block" style="background:#fff;border:1px solid #fde2e2;color:#333;">${formatText(q.a)}</pre></div>${renderDesc(q, true)}</div>`;
     }
     dom.cardArea.innerHTML = html;
     
+    // 输入框聚焦处理（移动端适配）
     const focusHandler = (el) => {
         if(window.innerWidth < 768) {
             el.addEventListener('focus', () => document.body.classList.add('keyboard-open'));
@@ -586,7 +680,7 @@ function renderCard() {
         setTimeout(() => el.focus(), 100);
     };
 
-    if (q.type === '填空题' || q.type === '简答题') { 
+    if (!state.reciteMode && (q.type === '填空题' || q.type === '简答题')) { 
         const el = document.getElementById(`input-${q.id}`); 
         if(el) focusHandler(el);
     }
@@ -602,7 +696,18 @@ function renderCard() {
 
 function renderDesc(q, showNow = false) { return `<div id="explain-${q.id}" class="explain-box" style="display:${showNow?'block':'none'}"><strong>💡 解析：</strong>${formatText(q.desc)}</div>`; }
 function renderGrid() { let html = ''; state.currentList.forEach((q, i) => { let cls = 'grid-item'; if (i === state.idx) cls += ' current'; else if (state.corrects.includes(q.id)) cls += ' done-ok'; else if (state.mistakes.includes(q.id)) cls += ' done-err'; html += `<div class="${cls}" onclick="jumpTo(${i})">${i+1}</div>`; }); dom.gridBox.innerHTML = html; }
-function updateUI() { dom.statInfo.innerText = `错题：${state.mistakes.length} | 已掌握：${state.corrects.length}`; }
+
+function updateUI() { 
+    dom.statInfo.innerText = `错题：${state.mistakes.length} | 已掌握：${state.corrects.length}`; 
+    
+    // 动态进度条逻辑
+    const total = state.currentList.length || 1; 
+    const current = state.idx + 1; 
+    const percent = Math.min((current / total) * 100, 100);
+    if(dom.brandArea) {
+        dom.brandArea.style.setProperty('--progress', `${percent}%`);
+    }
+}
 
 function checkOne(el, val, correctAns, id) {
     if(el.parentElement.classList.contains('locked')) return; el.parentElement.classList.add('locked');
@@ -661,12 +766,9 @@ function jumpTo(i) {
 }
 function resetAll() { if(confirm('确定要清空本章所有记录（错题本、进度、已掌握）吗？')) { localStorage.removeItem(storeKey); location.reload(); } }
 
-// === 新增：强制重载功能 ===
 function forceReload() {
     if(confirm('⚠️ 警告：强制重载将清除您在当前设备上“新增”或“修改”的题目！\n\n系统将忽略本地缓存，并强制从服务器读取原始 JSON 文件。\n\n是否继续？')) {
-        // 关键点：移除存储“修改后题库”的 key
         localStorage.removeItem(storeKeyDB); 
-        // 刷新页面，init() 函数会发现没有本地缓存，从而去 fetch 新文件
         location.reload();
     }
 }
@@ -713,7 +815,7 @@ function openAdd() {
     
     toggleOptsField();
     
-    if(window.innerWidth < 768) toggleSidebar(); // 手机上点击添加后关闭侧边栏
+    if(window.innerWidth < 768) toggleSidebar(); 
     dom.editModal.style.display = 'block';
 }
 
@@ -746,7 +848,6 @@ function saveEdit() {
 
     if (state.isAdding) {
         // === 新增逻辑 ===
-        // 生成一个新ID：当前最大ID + 1
         const maxId = fullDB.length > 0 ? Math.max(...fullDB.map(i => i.id)) : 0;
         const newObj = {
             id: maxId + 1,
@@ -759,7 +860,6 @@ function saveEdit() {
         
         fullDB.push(newObj);
         
-        // 刷新列表，并跳转到最后一题
         changeMode(state.mode); 
         state.idx = state.currentList.length - 1;
         
@@ -816,5 +916,3 @@ init();
 </script>
 </body>
 </html>
-
-
