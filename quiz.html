@@ -33,6 +33,7 @@
             overflow: hidden;
         }
 
+        /* --- 侧边栏 --- */
         .sidebar {
             width: var(--sidebar-w);
             background: #fff;
@@ -43,15 +44,17 @@
             transition: transform 0.3s ease;
         }
 
+        /* 高级渐变效果 + 动态进度 */
         .brand-area {
             padding: 20px;
-            background: #2c3e50;
+            background: #2c3e50; /* 默认深色背景 */
             color: white;
             flex-shrink: 0;
             position: relative;
             overflow: hidden;
             z-index: 1;
         }
+        /* 进度条层 */
         .brand-area::before {
             content: '';
             position: absolute;
@@ -62,6 +65,7 @@
             z-index: -1;
             opacity: 0.9;
         }
+        /* 装饰光效 */
         .brand-area::after {
             content: '';
             position: absolute;
@@ -121,6 +125,7 @@
         .btn-add:hover { background: #85ce61; }
         .btn-export:hover { opacity: 0.9; }
 
+        /* --- 主内容区 --- */
         .main-area {
             flex: 1; display: flex; flex-direction: column; position: relative;
         }
@@ -128,7 +133,7 @@
         .scroll-wrapper {
             flex: 1; overflow-y: auto; padding: 40px;
             display: flex; justify-content: center;
-            padding-bottom: 120px; 
+            padding-bottom: 120px; /* 手机端输入时防止遮挡 */
         }
 
         .card {
@@ -148,6 +153,7 @@
         .btn-edit { background: none; border: 1px solid #dcdfe6; color: #606266; cursor: pointer; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; margin-left: 10px; }
         .btn-edit:hover { border-color: var(--primary); color: var(--primary); }
         
+        /* 背题模式开关样式 */
         .recite-toggle-wrapper { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #606266; cursor: pointer; user-select: none; }
         .toggle-switch { width: 40px; height: 20px; background: #dcdfe6; border-radius: 10px; position: relative; transition: 0.3s; }
         .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: 0.3s; }
@@ -191,10 +197,11 @@
         .recite-mask {
             background: #fdfdfd; border: 2px dashed #dcdfe6; border-radius: 8px;
             padding: 40px; text-align: center; color: #999; cursor: pointer;
-            font-size: 1.1rem; display: block; /* 默认显示 */
+            font-size: 1.1rem; display: block; 
             transition: all 0.2s;
         }
         .recite-mask:hover { border-color: var(--primary); color: var(--primary); background: #f0fdf9; }
+        /* 使用 !important 确保覆盖默认 display */
         .recite-mask.hidden { display: none !important; }
         
         .recite-content { display: none; margin-top: 20px; animation: slideDown 0.3s ease; }
@@ -258,6 +265,7 @@
             background: rgba(0,0,0,0.5); z-index: 18;
         }
 
+        /* 模态框样式 */
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         .close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
@@ -269,6 +277,7 @@
         .btn-save { background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-cancel { background: #f4f4f5; color: #606266; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
 
+        /* 适配移动端 */
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
@@ -435,11 +444,13 @@ const currentSubject = urlParams.get('subject') || 'vue';
 const storeKey = 'quiz_pro_v2_' + currentSubject; 
 const storeKeyDB = 'quiz_pro_db_' + currentSubject; // 用于存储修改后的题库
 
+// 扩展：支持自定义科目
 let subjectMap = {
     'vue': 'Vue.js', 'python': 'Python', 'os': '操作系统', 'network': '计算机网络',
     'mcu': '单片机', 'ds': '数据结构', 'se': '软件工程'
 };
 
+// 尝试从 LocalStorage 加载自定义科目列表以更新标题
 const customSubs = JSON.parse(localStorage.getItem('my_subjects') || '[]');
 const customSub = customSubs.find(s => s.id === currentSubject);
 if(customSub) subjectMap[currentSubject] = customSub.name;
@@ -474,11 +485,13 @@ const dom = {
 
 async function init() {
     try {
+        // 优先加载本地存储的修改版题库
         const localDB = localStorage.getItem(storeKeyDB);
         if (localDB) {
             fullDB = JSON.parse(localDB);
             console.log("Loaded from LocalStorage");
         } else {
+            // 尝试加载服务器文件，如果失败（可能是自定义科目），检查是否仅存在于 localStorage
             try {
                 const fileName = currentSubject + '.json';
                 const response = await fetch(fileName + '?v=' + new Date().getTime());
@@ -486,6 +499,7 @@ async function init() {
                 fullDB = await response.json();
                 console.log("Loaded from JSON file");
             } catch (e) {
+                // 如果是自定义科目但没有被正确保存到 localDB，这里可能会报错，提示用户
                 if (!localDB && !subjectMap[currentSubject] && !customSub) {
                     throw e; 
                 }
@@ -565,11 +579,13 @@ function changeMode(mode) {
     renderCard(); renderGrid(); updateUI();
 }
 
+// 切换背题模式
 function toggleReciteMode() {
     state.reciteMode = !state.reciteMode;
     renderCard(); 
 }
 
+// 渲染背题模式开关按钮
 function renderReciteToggle() {
     const activeClass = state.reciteMode ? 'recite-active' : '';
     const text = state.reciteMode ? '背题模式' : '输入模式';
@@ -579,6 +595,7 @@ function renderReciteToggle() {
             </div>`;
 }
 
+// 背题模式：点击遮罩显示答案
 function showReciteAnswer(btn) {
     btn.classList.add('hidden');
     const content = btn.nextElementSibling;
@@ -901,4 +918,3 @@ init();
 </script>
 </body>
 </html>
-
