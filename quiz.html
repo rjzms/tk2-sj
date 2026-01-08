@@ -697,7 +697,7 @@ function updateUI() {
 function checkOne(el, val, correctAns, id) {
     if(el.parentElement.classList.contains('locked')) return; el.parentElement.classList.add('locked');
     const isRight = val === correctAns; const explain = document.getElementById(`explain-${id}`);
-    if (isRight) { el.classList.add('correct'); handleResult(id, true); if(explain) explain.style.display = 'block'; setTimeout(() => nav(1), 800); }
+    if (isRight) { el.classList.add('correct'); handleResult(id, true); if(explain) explain.style.display = 'block'; setTimeout(() => nav(1), 500); }
     else { el.classList.add('wrong'); handleResult(id, false); Array.from(el.parentElement.children).forEach(child => { let keyEl = child.querySelector('.opt-key'); let text = child.innerText; if ((keyEl && keyEl.innerText.includes(correctAns)) || text === correctAns) { child.classList.add('correct'); } }); if(explain) explain.style.display = 'block'; }
 }
 
@@ -705,7 +705,7 @@ function toggleMulti(key) { const btn = document.getElementById(`mbtn-${key}`); 
 function checkMulti(id, correctStr) {
     const correctArr = correctStr.replace(/[^A-Z]/g, '').split('').sort(); const userArr = state.multiTemp.sort(); const isRight = JSON.stringify(correctArr) === JSON.stringify(userArr);
     const btns = document.querySelectorAll('.opt-btn'); btns.forEach(b => b.style.pointerEvents = 'none'); document.querySelector('.submit-btn').style.display = 'none'; const explain = document.getElementById(`explain-${id}`); if(explain) explain.style.display = 'block';
-    if (isRight) { userArr.forEach(k => document.getElementById(`mbtn-${k}`).classList.add('correct')); handleResult(id, true); setTimeout(() => nav(1), 1000); }
+    if (isRight) { userArr.forEach(k => document.getElementById(`mbtn-${k}`).classList.add('correct')); handleResult(id, true); setTimeout(() => nav(1), 500); }
     else { userArr.forEach(k => { const btn = document.getElementById(`mbtn-${k}`); if(!correctArr.includes(k)) btn.classList.add('wrong'); else btn.classList.add('correct'); }); correctArr.forEach(k => { const btn = document.getElementById(`mbtn-${k}`); if(!btn.classList.contains('correct')) btn.classList.add('correct'); }); handleResult(id, false); }
 }
 
@@ -718,7 +718,7 @@ function checkTextAnswer(id, correctAns, type) {
     
     document.body.classList.remove('keyboard-open');
 
-    if (isRight) { inputEl.classList.add('inp-correct'); feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-success'; feedbackEl.innerHTML = `✅ 回答正确！`; if(explainEl) explainEl.style.display = 'block'; handleResult(id, true); setTimeout(() => nav(1), 1000); }
+    if (isRight) { inputEl.classList.add('inp-correct'); feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-success'; feedbackEl.innerHTML = `✅ 回答正确！`; if(explainEl) explainEl.style.display = 'block'; handleResult(id, true); setTimeout(() => nav(1), 500); }
     else { inputEl.classList.add('inp-wrong'); feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-error'; feedbackEl.innerHTML = `❌ 回答有误，请参考标准答案。`; if(flashEl) { flashEl.style.display = 'block'; flashEl.querySelector('.answer-reveal').style.display = 'block'; } if(explainEl) explainEl.style.display = 'block'; handleResult(id, false); }
 }
 
@@ -730,7 +730,7 @@ function checkClozeAndSubmit(id) {
     
     document.body.classList.remove('keyboard-open');
 
-    if (allCorrect) { feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-success'; feedbackEl.innerHTML = `✅ 全部正确！太强了！`; handleResult(id, true); setTimeout(() => nav(1), 1000); }
+    if (allCorrect) { feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-success'; feedbackEl.innerHTML = `✅ 全部正确！太强了！`; handleResult(id, true); setTimeout(() => nav(1), 500); }
     else { feedbackEl.style.display = 'block'; feedbackEl.className = 'input-feedback feedback-error'; feedbackEl.innerHTML = `❌ 存在错误，请对照完整代码复习。`; if(fullAnsEl) fullAnsEl.style.display = 'block'; handleResult(id, false); }
 }
 
@@ -901,3 +901,4 @@ init();
 </script>
 </body>
 </html>
+
